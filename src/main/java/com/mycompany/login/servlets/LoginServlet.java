@@ -11,6 +11,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -30,12 +37,38 @@ public class LoginServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println(request.getParameter("email"));
-            out.println(request.getParameter("contraseña"));
+        String email = request.getParameter("email");
+        String contraseña = request.getParameter("contraseña");
+        
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
+       
+        String url="jdbc:mysql://localhost:3306/servletlogin";
+       
+        Connection  conexion;
+        Statement statement;
+        ResultSet rs;
+       
+        try {
+            conexion = DriverManager.getConnection(url, "root", "");
+            
+            statement = conexion.createStatement();
+            rs = statement.executeQuery("SELECT * FROM `usuarios` WHERE `email` = '" + email + "' AND `password` = '" + contraseña + "'");
+            if(rs.next()){
+                request.getSession().setAttribute("email", email);
+                response.sendRedirect("panel.jsp");
+            } else {
+                response.sendRedirect ("index.html");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+            
+           
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
